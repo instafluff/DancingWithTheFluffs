@@ -1,0 +1,29 @@
+{
+  "name": "dancingwiththefluffs",
+  "version": "1.0.0",
+  "description": "Dancing Derps Just Love to Dance!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instafluff/DancingWithTheFluffs.git"
+  },
+  "keywords": [
+    "Dance",
+    "Instafluff",
+    "Derp",
+    "Fun",
+    "Music"
+  ],
+  "author": "Instafluff",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/instafluff/DancingWithTheFluffs/issues"
+  },
+  "homepage": "https://github.com/instafluff/DancingWithTheFluffs#readme",
+  "dependencies": {
+    "webwebweb": "^1.1.10"
+  }
+}

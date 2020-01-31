@@ -1,0 +1,145 @@
+<html>
+	<head>
+	  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	  <script src="web/pinkfluffyunicorn.min.js"></script>
+	  <script src="web/tinycolor.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.3/howler.min.js"></script>
+  	  <script type="text/javascript">
+	      let drawVisual;
+		  let analyser;
+		  let dataArray;
+	      // extract data
+	      let allAboutThatBass = [];
+		  let timeToNextBeatDetect = 100;
+
+		  let danceDance = [];
+		  const danceCrewRows = 10;
+		  const danceCrewColumns = 13;
+
+		  function showDance( danceIndex, frame ) {
+			  danceDance[ danceIndex ].up.visible = false;
+			  danceDance[ danceIndex ].down.visible = false;
+			  danceDance[ danceIndex ][ frame ].visible = true;
+			  // switch( frame ) {
+				//   case "up":
+				//   	// console.log( danceDance[ danceIndex ][ frame ] );
+				//   	danceDance[ danceIndex ][ frame ].tint = PIXI.utils.string2hex( tinycolor( "gold" ).toHexString() );
+				//   	break;
+				//   case "down":
+				//   	danceDance[ danceIndex ][ frame ].tint = PIXI.utils.string2hex( tinycolor( "rebeccapurple" ).toHexString() );
+				//   	break;
+			  // }
+		  }
+
+  		  function Init() {
+			  Unicorn.Load( {
+				  "bongo-up": "web/images/bongoPawUp.png",
+				  "bongo-down": "web/images/bongoPawDown.png",
+			  } );
+
+			  for( let y = 0; y < danceCrewRows; y++ ) {
+				  for( let x = 0; x < danceCrewColumns; x++ ) {
+					  danceDance.push( {
+						  "up": Unicorn.AddOverlay( `up${x}_${y}`, "bongo-up", x * 100, y * 64 ),
+						  "down": Unicorn.AddOverlay( `down${x}_${y}`, "bongo-down", x * 100, y * 64 ),
+					  });
+					  allAboutThatBass.push( 128 );
+					  showDance( x + y * danceCrewColumns, "up" );
+				  }
+			  }
+
+			  var sound = new Howl({
+				  src: [ "web/bongo_madness.mp3" ]
+			  });
+
+			  Howler.volume( 0.1 );
+			  sound.on( "load", function() {
+				  try {
+					  // make sure AudioContext will work fine in different browsers
+				      // let AudioContext = window.AudioContext || window.webkitAudioContext;
+				      // let audioCtx = new AudioContext();
+					  let audioCtx = Howler.ctx;
+					  // console.log( audioCtx );
+				      // copy audio source data to manipulate later
+				      // let source = audioCtx.createMediaElementSource( audioElement );
+				      // create audio analyser
+				      analyser = audioCtx.createAnalyser();
+				      // set audio analyser
+				      analyser.fftSize = 2048;
+				      let bufferLength = analyser.frequencyBinCount;
+					  dataArray = new Uint8Array( bufferLength );
+				      // Bind our analyser to the media element source.
+				      // source.connect( analyser );
+				      // source.connect( audioCtx.destination );
+					  // window.onbeforeunload = async function( event ) {
+						//   await audioCtx.close();
+					  // };
+					  // Connect the masterGain -> analyser (disconnecting masterGain -> destination)
+					  Howler.masterGain.connect(analyser);
+					  // Connect the analyser -> destination
+					  analyser.connect(Howler.ctx.destination);
+					  sound.play();
+				  }
+				  catch( error ) {
+					  console.log( "context:", error );
+				  }
+			  } );
+  		  }
+
+  	      function Update( timestamp, timeDiffInMs ) {
+  	        // Add Update Loop
+  	        // console.log( timestamp, timeDiffInMs );
+			if( analyser ) {
+				timeToNextBeatDetect -= timeDiffInMs;
+				if( timeToNextBeatDetect <= 0 ) {
+					timeToNextBeatDetect = 100;
+					analyser.getByteTimeDomainData( dataArray );
+			        // analyser.getByteFrequencyData(dataArray);
+			        // console.log( dataArray );
+					for( let y = 0; y < danceCrewRows; y++ ) {
+						for( let x = 0; x < danceCrewColumns; x++ ) {
+							let danceIndex = y * danceCrewColumns + x;
+							let beatIndex = Math.floor( danceIndex * dataArray.length / danceCrewColumns ) % dataArray.length;
+							if( dataArray[ beatIndex ] > allAboutThatBass[ danceIndex ] + 0.5 ) {
+								showDance( danceIndex, "down" );
+								setTimeout( function() {
+									showDance( danceIndex, "up" );
+								}, 100 );
+							}
+							allAboutThatBass[ danceIndex ] = dataArray[ beatIndex ];
+						}
+					}
+				}
+			}
+  	      }
+
+  		  function OnChatCommand( user, command, message, flags, extra ) {
+  		  }
+
+  		  function OnChatMessage( user, message, flags, self, extra ) {
+  		  }
+
+  	      window.addEventListener('load', () => {
+  	        Unicorn.Create( "unicorn-display", {
+  	          width: 1280,
+  	          height: 720,
+  	          // background: "#000000",// "transparent",
+  	          background: "transparent",
+  	          init: Init,
+  	          update: Update,
+  	          channel: "Instafluff",
+  	          onCommand: OnChatCommand,
+  	          onChat: OnChatMessage,
+  	          // screenWalls: false // Default: true
+  	          // gravity: { x: 0, y: 0.5 } // Default: { x: 0, y: 1 }
+  	        });
+  	      });
+  	  </script>
+	</head>
+	<body>
+      <div id="unicorn-display"></div>
+	  <!-- <audio id="audio-source" src="web/bongo_madness.mp3" controls preload="none" autoplay="false">
+		  <p>Your browser does not support the audio element.</p>
+	  </audio> -->
+	</body>
+</html>
